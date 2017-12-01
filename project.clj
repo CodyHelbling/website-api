@@ -7,7 +7,10 @@
                  [compojure "1.6.0"]
                  [ring/ring-core "1.6.2"]
                  [ring/ring-defaults "0.3.1"]
-                 [ring/ring-jetty-adapter "1.6.2"]]
+                 [ring/ring-jetty-adapter "1.6.2"]
+                 [com.novemberain/monger "3.1.0"]
+                 [org.clojure/data.json "0.2.6"]
+                 [cheshire "5.8.0"]]
   :main ^:skip-aot website-api.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
