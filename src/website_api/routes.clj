@@ -3,6 +3,7 @@
             [compojure.route :as route]
             [compojure.handler :as handler]
             [compojure.response :as response]
+            [clojure.pprint :as pprint]
             [clojure.data.json :as json]
             [monger.json]
             [website-api.services :as services]
@@ -46,8 +47,9 @@
 
 
 (compojure/defroutes app
-  (compojure/GET "/" [request]
-                 (println "Request: " request)
+  (compojure/GET "/" request
+                 (println "Route: /")
+                 (pprint/pprint request)
                  (if (authenticated? request)
                    {:body (str "Hello " (:identity request) "!")
                     :status 200
@@ -55,6 +57,15 @@
                    {:body "Hello Anonymous!"
                     :status 200
                     :headers {"Content-Type" "text/plain"}}))
+  (compojure/POST "/api/user" request
+                  (println "Route: /api/user")
+                  (pprint/pprint request)
+                  (services/create-user request))
+  (compojure/GET "/api/user" request
+                 (json/write-str (services/get-users)))
+  (compojure/GET "/api/user/:email" [email]
+                 (json/write-str (services/get-user email)))
+  ;; /api/user/  PUT
   (compojure/POST "/login" [] login)
   (compojure/GET "/test-write" [] {:body (json/write-str (services/test-write))
                                    :status 200
