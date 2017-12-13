@@ -4,7 +4,11 @@
 
 (def conn nil)
 
+(def db nil)
+
 (defn init []
-  (let [local_db (mg/connect)]
-    (println "Initializing Database Connection: " conn)
-    (def db local_db)))
+  (let [conn (mg/connect)
+        db (mg/get-db conn "monger-test")]
+    (println "Initializing Database Connection: \n" conn)
+    (def conn conn)
+    (def db db)))
