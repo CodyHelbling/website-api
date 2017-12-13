@@ -2,11 +2,12 @@
   (:gen-class)
   (:require [website-api.routes :as routes]
             [website-api.services :as services]
+            [website-api.db-config :as db]
             [ring.adapter.jetty :as jetty]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
-
+            
             [cheshire.core :as json]
             [buddy.sign.jwt :as jwt]
             [buddy.auth :refer [authenticated? throw-unauthorized]]
@@ -47,6 +48,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn -main
   [& args]
+  (db/init)
   (as-> routes/app $
       (wrap-authorization $ auth-backend)
       (wrap-authentication $ auth-backend)

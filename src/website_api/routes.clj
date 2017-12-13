@@ -57,6 +57,7 @@
                    {:body "Hello Anonymous!"
                     :status 200
                     :headers {"Content-Type" "text/plain"}}))
+  ;; User API
   (compojure/POST "/api/user" request
                   (println "Route: /api/user")
                   (pprint/pprint request)
@@ -66,6 +67,13 @@
   (compojure/GET "/api/user/:email" [email]
                  (json/write-str (services/get-user email)))
   ;; /api/user/  PUT
+  ;; /api/user/  DELETE
+  (compojure/DELETE "/api/user/:email" [email]
+                    (json/write-str (services/delete-user email)))
+
+
+  ;; Product API
+  
   (compojure/POST "/login" [] login)
   (compojure/GET "/test-write" [] {:body (json/write-str (services/test-write))
                                    :status 200

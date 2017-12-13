@@ -1,31 +1,24 @@
 (ns website-api.services
-  (:require [monger.core :as mg]
+  (:require [website-api.db-config :as db]
+            [monger.core :as mg]
             [monger.collection :as mc]
+            [monger.operators :refer :all]
             [clojure.data.json :as json])
   (:import [com.mongodb MongoOptions ServerAddress]
            [org.bson.types ObjectId]))
 
-(defn get-user [email]
-  (println "EMAIL: " email)
-  (let [conn (mg/connect)
-        db   (mg/get-db conn "monger-test")
-        coll "documents"
-        user (mc/find-one db coll {:email email})]
-    (println (str user))
-    user))
+(declare create-user
+         delete-user
+         get-user
+         get-users
+         test-read
+         test-remove
+         test-write)
 
-(defn get-users []
-  (println "get-users")
-  (let [conn (mg/connect)
-        db   (mg/get-db conn "monger-test")
-        coll "documents"
-        users (mc/find-maps db coll {:type "user"})]
-    (println (str users))
-    users))  
-
+;; User Services
 (defn create-user [request]
   (println "create-user request: " request)
-  (let [conn (mg/connect)
+  (let [conn db/conn
         db   (mg/get-db conn "monger-test")
         coll "documents"
         id   (ObjectId.)]
@@ -35,15 +28,52 @@
                                      :firstName (get-in request [:body :firstName])
                                      :lastName  (get-in request [:body :lastName])
                                      :email     (get-in request [:body :email])
-                                     :password  (get-in request [:body :password])})
+                                     :password  (get-in request [:body :password])
+                                     :isActive  true})
     (json/write-str (get-user (get-in request [:body :email])))
     (catch Exception e 
       {:body (str "Failure: User Creation: Exception: " e)
        :status 500
        :headers {"Content-Type" "text/plain"}}))))
 
+(defn delete-user [email]
+  (println "delete-user: email" email)
+  (let [conn db/conn
+        db   (mg/get-db conn "monger-test")
+        coll "documents"
+        user (mc/update db coll  {:email email} {$set {:isActive false}} {:upsert true})]
+    (println user)
+    (get-user email)))
+              
+(defn get-user [email]
+  (println "EMAIL: " email)
+  (let [conn db/conn
+        db   (mg/get-db conn "monger-test")
+        coll "documents"
+        user (mc/find-one db coll {:email email})]
+    (println (str user))
+    user))
+
+(defn get-users []
+  (println "get-users")
+  (let [conn db/conn
+        db   (mg/get-db conn "monger-test")
+        coll "documents"
+        users (mc/find-maps db coll {:type "user"})]
+    (println (str users))
+    users))  
+
+;; Test Services
+;; Remove all documents from the database
+(defn test-remove []
+  (let [conn db/conn
+        db   (mg/get-db conn "monger-test")
+        coll "documents"]
+    (mc/remove db coll)))
+
+
 (defn test-write []
-  (let [conn (mg/connect)
+  (let [conn db/conn
         db   (mg/get-db conn "monger-test")
         coll "documents"]
     (mc/insert-and-return db coll {:_id (ObjectId.)
@@ -52,15 +82,9 @@
                                    :roles "RolesTest"})))
 
 (defn test-read []
-  (let [conn (mg/connect)
+  (let [conn db/conn
         db   (mg/get-db conn "monger-test")
         coll "documents"
         all-docs (mc/find-maps db coll)]
     all-docs))
 
-;; Remove all documents from the database
-(defn test-remove []
-  (let [conn (mg/connect)
-        db   (mg/get-db conn "monger-test")
-        coll "documents"]
-    (mc/remove db coll)))
