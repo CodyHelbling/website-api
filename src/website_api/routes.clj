@@ -66,8 +66,9 @@
                  (json/write-str (services/get-users)))
   (compojure/GET "/api/user/:email" [email]
                  (json/write-str (services/get-user email)))
-  ;; /api/user/  PUT
-  ;; /api/user/  DELETE
+  (compojure/PUT "/api/user" request
+                 (pprint/pprint request)
+                 (json/write-str (services/update-user request)))
   (compojure/DELETE "/api/user/:email" [email]
                     (json/write-str (services/delete-user email)))
 

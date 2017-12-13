@@ -1,5 +1,6 @@
 (ns website-api.services
   (:require [website-api.db-config :as db]
+            [clojure.pprint :as pprint]
             [monger.core :as mg]
             [monger.collection :as mc]
             [monger.operators :refer :all]
@@ -59,9 +60,20 @@
     (println (str users))
     users))
 
-;; (defn update-user [request]
-;;   (println "update-user")
-;;   (let [con
+(defn update-user [request]
+  (println "update-user")
+  (let [db db/db
+        coll "documents"
+        updates (doall (filter (fn [[k v]] (not (nil? v)))
+                               {:firstName (get-in request [:body :firstName])
+                                :lastName (get-in request [:body :lastName])
+                                :email (get-in request [:body :email])}))
+        thing (println "Realized: " (realized? updates))
+        dfsg  (println "Type: "(type updates))
+        asdf  (pprint/pprint updates)
+        user (mc/update db coll updates {$set {:isActive false}} {:upsert true})]
+    (println "tetestasfsadfasd")
+    (get-user (:email request))))
   
 
 ;; Test Services
