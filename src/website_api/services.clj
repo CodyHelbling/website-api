@@ -18,8 +18,7 @@
 ;; User Services
 (defn create-user [request]
   (println "create-user request: " request)
-  (let [conn db/conn
-        db   db/db
+  (let [db   db/db
         coll "documents"
         id   (ObjectId.)]
     (try
@@ -38,8 +37,7 @@
 
 (defn delete-user [email]
   (println "delete-user: email" email)
-  (let [conn db/conn
-        db   db/db
+  (let [db   db/db
         coll "documents"
         user (mc/update db coll  {:email email} {$set {:isActive false}} {:upsert true})]
     (println user)
@@ -47,8 +45,7 @@
               
 (defn get-user [email]
   (println "EMAIL: " email)
-  (let [conn db/conn
-        db   db/db
+  (let [db   db/db
         coll "documents"
         user (mc/find-one db coll {:email email})]
     (println (str user))
@@ -56,25 +53,27 @@
 
 (defn get-users []
   (println "get-users")
-  (let [conn db/conn
-        db   db/db
+  (let [db   db/db
         coll "documents"
         users (mc/find-maps db coll {:type "user"})]
     (println (str users))
-    users))  
+    users))
+
+;; (defn update-user [request]
+;;   (println "update-user")
+;;   (let [con
+  
 
 ;; Test Services
 ;; Remove all documents from the database
 (defn test-remove []
-  (let [conn db/conn
-        db   db/db
+  (let [db   db/db
         coll "documents"]
     (mc/remove db coll)))
 
 
 (defn test-write []
-  (let [conn db/conn
-        db   db/db
+  (let [db   db/db
         coll "documents"]
     (mc/insert-and-return db coll {:_id (ObjectId.)
                                    :username "UserNameTest"
@@ -82,8 +81,7 @@
                                    :roles "RolesTest"})))
 
 (defn test-read []
-  (let [conn db/conn
-        db   db/db
+  (let [db   db/db
         coll "documents"
         all-docs (mc/find-maps db coll)]
     all-docs))
