@@ -31,7 +31,7 @@
                                      :password  (get-in request [:body :password])
                                      :isActive  true})
     (json/write-str (get-user (get-in request [:body :email])))
-    (catch Exception e 
+    (catch Exception e
       {:body (str "Failure: User Creation: Exception: " e)
        :status 500
        :headers {"Content-Type" "text/plain"}}))))
@@ -43,7 +43,7 @@
         user (mc/update db coll  {:email email} {$set {:isActive false}} {:upsert true})]
     (println user)
     (get-user email)))
-              
+
 (defn get-user [email]
   (println "EMAIL: " email)
   (let [db   db/db
@@ -64,17 +64,18 @@
   (println "update-user")
   (let [db db/db
         coll "documents"
-        updates (doall (filter (fn [[k v]] (not (nil? v)))
+        updates (filter (fn [[k v]] (not (nil? v)))
                                {:firstName (get-in request [:body :firstName])
                                 :lastName (get-in request [:body :lastName])
-                                :email (get-in request [:body :email])}))
+                                :email (get-in request [:body :email])})
+        u (apply hash-map (first updates))
         thing (println "Realized: " (realized? updates))
-        dfsg  (println "Type: "(type updates))
-        asdf  (pprint/pprint updates)
-        user (mc/update db coll updates {$set {:isActive false}} {:upsert true})]
+        ;dfsg  (println "Type: "(first updates))
+        ;asdf  (pprint/pprint (apply hash-map (first updates)))
+        user  (mc/update db coll u {$set {:isActive false}} {:upsert true})]
     (println "tetestasfsadfasd")
     (get-user (:email request))))
-  
+
 
 ;; Test Services
 ;; Remove all documents from the database
