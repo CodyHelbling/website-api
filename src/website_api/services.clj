@@ -22,19 +22,30 @@
   (let [db   db/db
         coll "documents"
         id   (ObjectId.)]
-    (try
-      (mc/insert-and-return db coll {:_id id
-                                     :type "user"
-                                     :firstName (get-in request [:body :firstName])
-                                     :lastName  (get-in request [:body :lastName])
-                                     :email     (get-in request [:body :email])
-                                     :password  (get-in request [:body :password])
-                                     :isActive  true})
-    (json/write-str (get-user (get-in request [:body :email])))
-    (catch Exception e
-      {:body (str "Failure: User Creation: Exception: " e)
-       :status 500
-       :headers {"Content-Type" "text/plain"}}))))
+    (if (get-user (get-in request [:body :email]))
+      {:body {:message "Conflict: User Creation: Email Already Exists"
+              :status 409
+              :endpoint "/api/user"
+              :method "POST"}
+       :status 409
+       :headers {"Content-Type" "text/plain"}}
+      (try
+        (mc/insert-and-return db coll {:_id id
+                                       :type "user"
+                                       :firstName (get-in request [:body :firstName])
+                                       :lastName  (get-in request [:body :lastName])
+                                       :email     (get-in request [:body :email])
+                                       :password  (get-in request [:body :password])
+                                       :isActive  true})
+        (json/write-str (get-user (get-in request [:body :email])))
+        (catch Exception e
+          ;; Todo: Log exception
+          {:body {:message (str "Failure: User Creation: Exception: " e)
+                  :status 500
+                  :endpoint "/api/user"
+                  :method "POST"}
+           :status 500
+           :headers {"Content-Type" "text/plain"}})))))
 
 (defn delete-user [email]
   (println "delete-user: email" email)
@@ -64,16 +75,11 @@
   (println "update-user")
   (let [db db/db
         coll "documents"
-        updates (filter (fn [[k v]] (not (nil? v)))
-                               {:firstName (get-in request [:body :firstName])
-                                :lastName (get-in request [:body :lastName])
-                                :email (get-in request [:body :email])})
-        u (apply hash-map (first updates))
-        thing (println "Realized: " (realized? updates))
-        ;dfsg  (println "Type: "(first updates))
-        ;asdf  (pprint/pprint (apply hash-map (first updates)))
-        user  (mc/update db coll u {$set {:isActive false}} {:upsert true})]
-    (println "tetestasfsadfasd")
+        updates (apply hash-map (first (filter (fn [[k v]] (not (nil? v)))
+                                               {:firstName (get-in request [:body :firstName])
+                                                :lastName (get-in request [:body :lastName])
+                                                :email (get-in request [:body :email])})))
+        user  (mc/update db coll updates {$set {:email "h@h.com"}} {:upsert true})]
     (get-user (:email request))))
 
 
