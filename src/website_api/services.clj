@@ -22,7 +22,7 @@
   (let [db   db/db
         coll "user"
         id   (ObjectId.)]
-    (if (get-user (get-in request [:body :email]))
+    (if (get-user request)
       {:body {:message "Conflict: User Creation: Email Already Exists"
               :status 409
               :endpoint "/api/user"
@@ -37,7 +37,7 @@
                                        :email     (get-in request [:body :email])
                                        :password  (get-in request [:body :password])
                                        :isActive  true})
-        (json/write-str (get-user (get-in request [:body :email])))
+        (json/write-str (get-user request))
         (catch Exception e
           ;; Todo: Log exception
           {:body {:message (str "Failure: User Creation: Exception: " e)
