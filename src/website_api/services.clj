@@ -20,7 +20,7 @@
 (defn create-user [request]
   (println "create-user request: " request)
   (let [db   db/db
-        coll "documents"
+        coll "user"
         id   (ObjectId.)]
     (if (get-user (get-in request [:body :email]))
       {:body {:message "Conflict: User Creation: Email Already Exists"
@@ -50,7 +50,7 @@
 (defn delete-user [email]
   (println "delete-user: email" email)
   (let [db   db/db
-        coll "documents"
+        coll "user"
         user (mc/update db coll  {:email email} {$set {:isActive false}} {:upsert true})]
     (println user)
     (get-user email)))
@@ -58,7 +58,7 @@
 (defn get-user [email]
   (println "EMAIL: " email)
   (let [db   db/db
-        coll "documents"
+        coll "user"
         user (mc/find-one db coll {:email email})]
     (println (str user))
     user))
@@ -66,15 +66,15 @@
 (defn get-users []
   (println "get-users")
   (let [db   db/db
-        coll "documents"
-        users (mc/find-maps db coll {:type "user"})]
+        coll "user"
+        users(mc/find-maps db "user")]
     (println (str users))
     users))
 
 (defn update-user [request]
   (println "update-user")
   (let [db db/db
-        coll "documents"
+        coll "user"
         updates (apply hash-map (first (filter (fn [[k v]] (not (nil? v)))
                                                {:firstName (get-in request [:body :firstName])
                                                 :lastName (get-in request [:body :lastName])
@@ -87,13 +87,13 @@
 ;; Remove all documents from the database
 (defn test-remove []
   (let [db   db/db
-        coll "documents"]
+        coll "user"]
     (mc/remove db coll)))
 
 
 (defn test-write []
   (let [db   db/db
-        coll "documents"]
+        coll "user"]
     (mc/insert-and-return db coll {:_id (ObjectId.)
                                    :username "UserNameTest"
                                    :password "PasswordTest"
@@ -101,7 +101,7 @@
 
 (defn test-read []
   (let [db   db/db
-        coll "documents"
+        coll "user"
         all-docs (mc/find-maps db coll)]
     all-docs))
 
