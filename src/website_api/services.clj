@@ -55,13 +55,13 @@
     (println user)
     (get-user email)))
 
-(defn get-user [email]
-  (println "EMAIL: " email)
+(defn get-user [request]
   (let [db   db/db
         coll "user"
+        email (get-in request [:body :email])
         user (mc/find-one db coll {:email email})]
     (println (str user))
-    user))
+    (doall user)))
 
 (defn get-users []
   (println "get-users")
@@ -75,12 +75,21 @@
   (println "update-user")
   (let [db db/db
         coll "user"
+        email (get-in request [:body :email])
+        firstName (get-in request [:body :firstName])
+        _id (get-in request [:body :_id])
+        lastName (get-in request [:body :lastName])
+        password (get-in request [:body :password])
         updates (apply hash-map (first (filter (fn [[k v]] (not (nil? v)))
-                                               {:firstName (get-in request [:body :firstName])
-                                                :lastName (get-in request [:body :lastName])
-                                                :email (get-in request [:body :email])})))
-        user  (mc/update db coll updates {$set {:email "h@h.com"}} {:upsert true})]
-    (get-user (:email request))))
+                                               {:_id _id
+                                                :firstName firstName
+                                                :lastName lastName
+                                                :email email
+                                                :password password})))
+
+        user  (mc/update db coll  {:_id _id} {$set updates} {:upsert true})]
+    ; (pprint/pprint updates)
+    (get-user email)))
 
 
 ;; Test Services

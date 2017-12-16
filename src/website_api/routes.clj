@@ -64,17 +64,16 @@
                   (services/create-user request))
   (compojure/GET "/api/user" request
                  (json/write-str (services/get-users)))
-  (compojure/GET "/api/user/:email" [email]
-                 (json/write-str (services/get-user email)))
+  (compojure/GET "/api/user" request
+                 (json/write-str (services/get-user request)))
   (compojure/PUT "/api/user" request
-                 (pprint/pprint request)
                  (json/write-str (services/update-user request)))
   (compojure/DELETE "/api/user/:email" [email]
                     (json/write-str (services/delete-user email)))
 
 
   ;; Product API
-  
+
   (compojure/POST "/login" [] login)
   (compojure/GET "/test-write" [] {:body (json/write-str (services/test-write))
                                    :status 200
@@ -84,6 +83,6 @@
                                   :headers {"Content-Type" "text/plain"}})
   (compojure/GET "/test-remove" [] {:body (str (services/test-remove))
                                     :status 200
-                                    :headers {"Content-Type" "text/plain"}})  
+                                    :headers {"Content-Type" "text/plain"}})
   (route/resources "/")
   (route/not-found "Page not found"))
