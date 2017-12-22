@@ -45,6 +45,17 @@
       (bad-request {:message "wrong auth data"}))))
 
 
+(defn get-first-name [request]
+  (get-in request [:body :firstName]))
+
+(defn get-last-name [request]
+  (get-in request [:body :lastName]))
+
+(defn get-email [request]
+  (get-in request [:body :email]))
+
+(defn get-password [request]
+  (get-in request [:body :password]))
 
 (compojure/defroutes app
   (compojure/GET "/" request
@@ -59,21 +70,33 @@
                     :headers {"Content-Type" "text/plain"}}))
   ;; User API
   (compojure/POST "/api/user" request
-                  (println "Route: /api/user")
-                  (pprint/pprint request)
-                  (services/create-user request))
+                  (println "Route: POST /api/user")
+                  ;;(pprint/pprint request)
+                  (let [firstName (get-first-name request)
+                        lastName (get-last-name request)
+                        email (get-email request)
+                        password (get-password request)]
+                  (json/write-str (services/create-user firstName lastName email password))))
+
   (compojure/GET "/api/user" request
+                 (println "Route: GET /api/user")
                  (json/write-str (services/get-users)))
   (compojure/GET "/api/user" request
-                 (json/write-str (services/get-user request)))
+                 (println "Route: GET /api/user")
+                 (json/write-str (services/get-user-by-email
+                                   (get-in request [:body :email] true))))
   (compojure/PUT "/api/user" request
-                 (json/write-str (services/update-user request)))
-  (compojure/DELETE "/api/user/:email" [email]
-                    (json/write-str (services/delete-user email)))
+                 (println "Route: PUT /api/user")
+                 (json/write-str (services/update-user
+                                   (get-in request [:body :_id]))))
+  (compojure/DELETE "/api/user" request
+                    (println "Route: DELETE /api/user")
+                    (json/write-str (services/delete-user request)))
 
 
   ;; Product API
 
+  ;; Test Endpoints
   (compojure/POST "/login" [] login)
   (compojure/GET "/test-write" [] {:body (json/write-str (services/test-write))
                                    :status 200

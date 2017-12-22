@@ -18,4 +18,6 @@
                  [org.clojure/tools.logging "0.4.0"]]
   :main ^:skip-aot website-api.core
   :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}})
+  :profiles {:dev {:resource-paths ["src"]
+                   :test-paths ["website_api/test"]}
+              :uberjar {:aot :all}})

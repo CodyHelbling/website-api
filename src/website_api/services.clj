@@ -1,6 +1,6 @@
 (ns website-api.services
   (:require [website-api.db-config :as db]
-            [clojure.pprint :as pprint]
+            [clojure.pprint :as pp]
             [monger.core :as mg]
             [monger.collection :as mc]
             [monger.operators :refer :all]
@@ -10,86 +10,93 @@
 
 (declare create-user
          delete-user
-         get-user
+         get-user-by-id
+         get-user-by-email
          get-users
          test-read
          test-remove
          test-write)
 
+
 ;; User Services
-(defn create-user [request]
-  (println "create-user request: " request)
+(defn create-user [firstName lastName email password]
+  ; (println "create-user")
   (let [db   db/db
         coll "user"
-        id   (ObjectId.)]
-    (if (get-user request)
-      {:body {:message "Conflict: User Creation: Email Already Exists"
-              :status 409
-              :endpoint "/api/user"
-              :method "POST"}
-       :status 409
-       :headers {"Content-Type" "text/plain"}}
+        _id   (ObjectId.)]
+    ; Only create user if their email is unique
+    (if (= nil (get-user-by-email email))
       (try
-        (mc/insert-and-return db coll {:_id id
+        (mc/insert-and-return db coll {:_id _id
                                        :type "user"
-                                       :firstName (get-in request [:body :firstName])
-                                       :lastName  (get-in request [:body :lastName])
-                                       :email     (get-in request [:body :email])
-                                       :password  (get-in request [:body :password])
+                                       :firstName firstName
+                                       :lastName  lastName
+                                       :email     email
+                                       :password  password
                                        :isActive  true})
-        (json/write-str (get-user request))
+        {:body {:message "Successful User Creation"
+                 :status 400
+                 :endpoint "api/user"
+                 :method "POST"
+                 :_id (str _id)}}
         (catch Exception e
           ;; Todo: Log exception
           {:body {:message (str "Failure: User Creation: Exception: " e)
                   :status 500
                   :endpoint "/api/user"
-                  :method "POST"}
+                  :method "POST"
+                  :_id "n/a"}
            :status 500
-           :headers {"Content-Type" "text/plain"}})))))
+           :headers {"Content-Type" "text/plain"}}))
+      ; If email exists, return a message
+      {:body {:message "Conflict: User Creation: Email Already Exists"
+              :status 409
+              :endpoint "/api/user"
+              :method "POST"
+              :_id "n/a"}
+       :status 409
+       :headers {"Content-Type" "text/plain"}})))
 
-(defn delete-user [email]
-  (println "delete-user: email" email)
+(defn delete-user [_id]
   (let [db   db/db
         coll "user"
-        user (mc/update db coll  {:email email} {$set {:isActive false}} {:upsert true})]
-    (println user)
-    (get-user email)))
+        user (mc/update-by-id db coll (ObjectId. _id) {$set {:isActive false}} {:upsert false})]
+    (get-user-by-id _id)))
 
-(defn get-user [request]
+(defn get-user-by-email [email]
   (let [db   db/db
         coll "user"
-        email (get-in request [:body :email])
-        user (mc/find-one db coll {:email email})]
-    (println (str user))
-    (doall user)))
+        user (mc/find-one-as-map db coll {:email email})]
+    user))
+
+(defn get-user-by-id [_id]
+  (let [db   db/db
+        coll "user"
+        user (mc/find-map-by-id db coll (ObjectId. _id))]
+    ;(pp/pprint user)
+    user))
 
 (defn get-users []
-  (println "get-users")
   (let [db   db/db
         coll "user"
-        users(mc/find-maps db "user")]
-    (println (str users))
+        users (mc/find-maps db "user")]
+    ; (println (str users))
     users))
 
-(defn update-user [request]
-  (println "update-user")
+(defn update-user [_id updates]
   (let [db db/db
         coll "user"
-        email (get-in request [:body :email])
-        firstName (get-in request [:body :firstName])
-        _id (get-in request [:body :_id])
-        lastName (get-in request [:body :lastName])
-        password (get-in request [:body :password])
+        email (get-in updates [:email])
+        firstName (get-in updates [:firstName])
+        lastName (get-in updates [:lastName])
+        password (get-in updates [:password])
         updates (apply hash-map (first (filter (fn [[k v]] (not (nil? v)))
-                                               {:_id _id
-                                                :firstName firstName
+                                               {:firstName firstName
                                                 :lastName lastName
                                                 :email email
                                                 :password password})))
-
-        user  (mc/update db coll  {:_id _id} {$set updates} {:upsert true})]
-    ; (pprint/pprint updates)
-    (get-user email)))
+        user  (mc/update-by-id db coll (ObjectId. _id) {$set updates})]
+    (get-user-by-id _id)))
 
 
 ;; Test Services

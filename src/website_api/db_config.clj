@@ -9,6 +9,6 @@
 (defn init []
   (let [conn (mg/connect)
         db (mg/get-db conn "monger-test")]
-    (println "Initializing Database Connection: \n" conn)
+    (println "\nInitializing Database Connection:");  conn)
     (def conn conn)
     (def db db)))
