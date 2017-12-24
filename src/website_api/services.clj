@@ -67,7 +67,13 @@
   (let [db   db/db
         coll "user"
         user (mc/find-one-as-map db coll {:email email})]
-    user))
+    {:collection
+     {:version "1.0"
+      :href (str (+ db/server "/api/user"))
+      :items user}
+     :links []
+     :queries []
+     :template {}}))
 
 (defn get-user-by-id [_id]
   (let [db   db/db

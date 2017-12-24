@@ -7,7 +7,7 @@
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
-            
+
             [cheshire.core :as json]
             [buddy.sign.jwt :as jwt]
             [buddy.auth :refer [authenticated? throw-unauthorized]]
@@ -15,6 +15,7 @@
             [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]))
 
 (def secret "mysupersecret")
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Semantic response helpers

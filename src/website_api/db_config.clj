@@ -12,3 +12,5 @@
     (println "\nInitializing Database Connection:");  conn)
     (def conn conn)
     (def db db)))
+
+(def server "http://localhost")
