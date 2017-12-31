@@ -1,5 +1,6 @@
 (ns website-api.services
   (:require [website-api.db-config :as db]
+            [website-api.server-config :as server]
             [clojure.pprint :as pp]
             [monger.core :as mg]
             [monger.collection :as mc]
@@ -10,6 +11,7 @@
 
 (declare create-user
          delete-user
+         does-email-exist
          get-user-by-id
          get-user-by-email
          get-users
@@ -19,13 +21,13 @@
 
 
 ;; User Services
-(defn create-user [firstName lastName email password]
-  ; (println "create-user")
-  (let [db   db/db
+(defn db-create-user [firstName lastName email password]
+                                        ; (println "create-user")
+  (let [db db/db
         coll "user"
-        _id   (ObjectId.)]
-    ; Only create user if their email is unique
-    (if (= nil (get-user-by-email email))
+        _id  (ObjectId.)]
+    ;; Only create user if their email is unique
+    (if-not (does-email-exist email)
       (try
         (mc/insert-and-return db coll {:_id _id
                                        :type "user"
@@ -34,28 +36,40 @@
                                        :email     email
                                        :password  password
                                        :isActive  true})
-        {:body {:message "Successful User Creation"
-                 :status 400
-                 :endpoint "api/user"
-                 :method "POST"
-                 :_id (str _id)}}
+        ;; User successfully created
+        {:collection
+         {:version 1.0,
+          :href (str server/addr "/api/user")
+          :links []
+          :items [
+                  {:href (str server/addr "/api/user/" _id)
+                   :data [{
+                           :_id (str _id)
+                           :firstName firstName
+                           :lastName lastName
+                           :email email
+                           }]
+                   :links []
+                   }]}}
         (catch Exception e
           ;; Todo: Log exception
-          {:body {:message (str "Failure: User Creation: Exception: " e)
-                  :status 500
-                  :endpoint "/api/user"
-                  :method "POST"
-                  :_id "n/a"}
-           :status 500
-           :headers {"Content-Type" "text/plain"}}))
-      ; If email exists, return a message
-      {:body {:message "Conflict: User Creation: Email Already Exists"
-              :status 409
-              :endpoint "/api/user"
-              :method "POST"
-              :_id "n/a"}
-       :status 409
-       :headers {"Content-Type" "text/plain"}})))
+          {:collection
+           {:version 1.0,
+            :href (str server/addr "/api/user")
+            :error {
+                    :title "User Creation Failure"
+                    :message "Please contact website owner."
+                    :code ""
+                    }}}))
+      ;; If email exists, return a message
+      {:collection
+       {:version 1.0,
+        :href (str server/addr "/api/user")
+        :error {
+                :title "User Creation Failure"
+                :message "Email Already Exists"
+                :code ""
+                }}})))
 
 (defn delete-user [_id]
   (let [db   db/db
@@ -69,11 +83,19 @@
         user (mc/find-one-as-map db coll {:email email})]
     {:collection
      {:version "1.0"
-      :href (str (+ db/server "/api/user"))
+      :href (str db/server "/api/user/" (:_id user))
       :items user}
      :links []
      :queries []
      :template {}}))
+
+(defn does-email-exist [email]
+  (let [db db/db
+        coll "user"
+        user (mc/find-one-as-map db coll {:email email})]
+    (if user
+      true
+      false)))
 
 (defn get-user-by-id [_id]
   (let [db   db/db
@@ -124,6 +146,8 @@
 (defn test-read []
   (let [db   db/db
         coll "user"
-        all-docs (mc/find-maps db coll)]
+        all-docs (monger.collection/find-maps db coll)]
     all-docs))
 
+(defn something []
+  "Hello World")
