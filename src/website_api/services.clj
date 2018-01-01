@@ -10,10 +10,11 @@
            [org.bson.types ObjectId]))
 
 (declare create-user
-         db-create-user
+         create-user-db
          delete-user
          does-email-exist
          get-user-by-id
+         get-user-by-id-db
          get-user-by-email
          get-users
          test-read
@@ -24,17 +25,21 @@
 ;; User Services
 (defn create-user [request]
   (pp/pprint request)
-  (let [firstName (get-in request [:body :firstName])
+  (let [;; Get parameters data from request
+        firstName (get-in request [:body :firstName])
         lastName (get-in request [:body :lastName])
         email (get-in request [:body :email])
-        password (get-in request [:body :password])]
-    ;; (pp/pprint firstName)
-    ;; (pp/pprint lastName)
-    ;; (pp/pprint email)
-    ;; (pp/pprint password)
-    (db-create-user firstName lastName email password)))
+        password (get-in request [:body :password])
+        ;; Build the response
+        new-user-creation (create-user-db firstName lastName email password)
+        body (get-in new-user-creation [:body])
+        status (get-in new-user-creation [:status])
+        headers (get-in new-user-creation [:headers])]
+    {:status status
+     :headers headers
+     :body (json/write-str body)}))
 
-(defn db-create-user [firstName lastName email password]
+(defn create-user-db [firstName lastName email password]
   (let [db db/db
         coll "user"
         _id  (ObjectId.)]
@@ -51,43 +56,37 @@
         ;; User successfully created
         {:status 200
          :headers {"ContentType" "application/vnd.collection+json"}
-         :body (json/write-str {:collection
+         :body {:collection
                 {:version 1.0
                  :href (str server/addr "/api/user")
                  :links []
                  :items [{:href (str server/addr "/api/user/" _id)
-                          :data [{:_id (str _id)
-                                  :firstName firstName
-                                  :lastName lastName
-                            :email email
-                                  }]
-                          :links []
-                          }]}})}
+                          :data [{:name "id" :value (str _id) :prompt "User Id"}
+                                 {:name "firstName" :value firstName :prompt "First Name"}
+                                 {:name "lastName" :value lastName :prompt "Last Name"}
+                                 {:name "email" :value email :prompt "Email Address"}]
+                          :links []}]}}}
         (catch Exception e
           ;; Todo: Log exception
           {:status 500
            :headers {"ContentType" "application/vnd.collection+json"}
-           :body (json/write-str
-                  {:collection          
+           :body {:collection          
                    {:version 1.0,
                     :href (str server/addr "/api/user")
                     :error {
                             :title "User Creation Failure"
                             :message "Please contact website owner."
-                            :code ""}}})}))
+                            :code ""}}}}))
       ;; If email exists, return a message
         {:status 409
          :headers {"ContentType" "application/vnd.collection+json"}
-         :body (json/write-str
-                {:collection          
+         :body {:collection          
                  {:version 1.0,
                   :href (str server/addr "/api/user")
                   :error {
                           :title "User Creation Failure"
                           :message "Email Already Exists"
-                          :code ""}}})})))
-
-
+                          :code ""}}}})))
 
 (defn delete-user [_id]
   (let [db   db/db
@@ -116,12 +115,48 @@
       false)))
 
 (defn get-user-by-id [_id]
-  (let [db   db/db
-        coll "user"
-        user (mc/find-map-by-id db coll (ObjectId. _id))]
-    ;(pp/pprint user)
-    user))
+  (let [user (get-user-by-id-db _id)
+        body (get-in user [:body])
+        status (get-in user [:status])
+        headers (get-in user [:headers])]
+    {:status status
+     :headers headers
+     :body (json/write-str body)}))
+                     
 
+(defn get-user-by-id-db [_id]
+  (try
+    (let [db   db/db
+          coll "user"
+          user (mc/find-map-by-id db coll (ObjectId. _id))
+          firstName (get-in user [:firstName])
+          lastName (get-in user [:lastName])
+          email (get-in user [:email])]
+      
+      {:status 200
+       :headers {"ContentType" "application/vnd.collection+json"}
+       :body {:collection
+              {:version 1.0
+               :href (str "http://" server/addr "/api/user")
+               :links []
+               :items [{:href (str "http://" server/addr "/api/user/" _id)
+                        :data [{:name "id" :value _id :prompt "User Id"}
+                               {:name "firstName" :value firstName :prompt "First Name"}
+                               {:name "lastName" :value lastName :prompt "Last Name"}
+                               {:name "email" :value email :email "Email Address"}]}
+                       :links []]}}})
+  (catch Exception e
+    ;; Todo: Log exception
+    {:status 500
+     :headers {"ContentType" "application/vnd.collection+json"}
+     :body {:collection          
+            {:version 1.0,
+             :href (str server/addr "/api/user")
+             :error {
+                     :title "User Retrieval Failure"
+                     :message "Please contact website owner."
+                     :code ""}}}})))
+ 
 (defn get-users []
   (let [db   db/db
         coll "user"

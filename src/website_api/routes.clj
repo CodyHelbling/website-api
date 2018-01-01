@@ -78,7 +78,7 @@
                  (json/write-str (services/get-users)))
   (compojure/GET "/api/user/:id" [_id]
                  (println "Route: GET /api/user/:id")
-                 (json/write-str (services/get-user-by-id _id)))
+                 (services/get-user-by-id _id))
   (compojure/PUT "/api/user" request
                  (println "Route: PUT /api/user")
                  (json/write-str (services/update-user
