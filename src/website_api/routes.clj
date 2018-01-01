@@ -71,12 +71,7 @@
   ;; User API
   (compojure/POST "/api/user" request
                   (println "Route: POST /api/user")
-                  ;;(pprint/pprint request)
-                  (let [firstName (get-first-name request)
-                        lastName (get-last-name request)
-                        email (get-email request)
-                        password (get-password request)]
-                  (json/write-str (services/create-user firstName lastName email password))))
+                  (services/create-user request))
 
   (compojure/GET "/api/user" request
                  (println "Route: GET /api/user")

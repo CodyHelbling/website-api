@@ -10,6 +10,7 @@
            [org.bson.types ObjectId]))
 
 (declare create-user
+         db-create-user
          delete-user
          does-email-exist
          get-user-by-id
@@ -21,8 +22,19 @@
 
 
 ;; User Services
+(defn create-user [request]
+  (pp/pprint request)
+  (let [firstName (get-in request [:body :firstName])
+        lastName (get-in request [:body :lastName])
+        email (get-in request [:body :email])
+        password (get-in request [:body :password])]
+    ;; (pp/pprint firstName)
+    ;; (pp/pprint lastName)
+    ;; (pp/pprint email)
+    ;; (pp/pprint password)
+    (db-create-user firstName lastName email password)))
+
 (defn db-create-user [firstName lastName email password]
-                                        ; (println "create-user")
   (let [db db/db
         coll "user"
         _id  (ObjectId.)]
@@ -37,39 +49,45 @@
                                        :password  password
                                        :isActive  true})
         ;; User successfully created
-        {:collection
-         {:version 1.0,
-          :href (str server/addr "/api/user")
-          :links []
-          :items [
-                  {:href (str server/addr "/api/user/" _id)
-                   :data [{
-                           :_id (str _id)
-                           :firstName firstName
-                           :lastName lastName
-                           :email email
-                           }]
-                   :links []
-                   }]}}
+        {:status 200
+         :headers {"ContentType" "application/vnd.collection+json"}
+         :body (json/write-str {:collection
+                {:version 1.0
+                 :href (str server/addr "/api/user")
+                 :links []
+                 :items [{:href (str server/addr "/api/user/" _id)
+                          :data [{:_id (str _id)
+                                  :firstName firstName
+                                  :lastName lastName
+                            :email email
+                                  }]
+                          :links []
+                          }]}})}
         (catch Exception e
           ;; Todo: Log exception
-          {:collection
-           {:version 1.0,
-            :href (str server/addr "/api/user")
-            :error {
-                    :title "User Creation Failure"
-                    :message "Please contact website owner."
-                    :code ""
-                    }}}))
+          {:status 500
+           :headers {"ContentType" "application/vnd.collection+json"}
+           :body (json/write-str
+                  {:collection          
+                   {:version 1.0,
+                    :href (str server/addr "/api/user")
+                    :error {
+                            :title "User Creation Failure"
+                            :message "Please contact website owner."
+                            :code ""}}})}))
       ;; If email exists, return a message
-      {:collection
-       {:version 1.0,
-        :href (str server/addr "/api/user")
-        :error {
-                :title "User Creation Failure"
-                :message "Email Already Exists"
-                :code ""
-                }}})))
+        {:status 409
+         :headers {"ContentType" "application/vnd.collection+json"}
+         :body (json/write-str
+                {:collection          
+                 {:version 1.0,
+                  :href (str server/addr "/api/user")
+                  :error {
+                          :title "User Creation Failure"
+                          :message "Email Already Exists"
+                          :code ""}}})})))
+
+
 
 (defn delete-user [_id]
   (let [db   db/db
