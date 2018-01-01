@@ -16,6 +16,7 @@
          get-user-by-id
          get-user-by-id-db
          get-user-by-email
+         get-user-by-email-db
          get-users
          test-read
          test-remove
@@ -95,16 +96,47 @@
     (get-user-by-id _id)))
 
 (defn get-user-by-email [email]
-  (let [db   db/db
-        coll "user"
-        user (mc/find-one-as-map db coll {:email email})]
-    {:collection
-     {:version "1.0"
-      :href (str db/server "/api/user/" (:_id user))
-      :items user}
-     :links []
-     :queries []
-     :template {}}))
+  (let [user (get-user-by-email-db email)
+        body (get-in user [:body])
+        status (get-in user [:status])
+        headers (get-in user [:headers])]
+    {:status status
+     :headers headers
+     :body (json/write-str body)}))
+
+(defn get-user-by-email-db [email]
+  (try
+    (let [db   db/db
+          coll "user"
+          user (mc/find-one-as-map db coll {:email email})
+          firstName (get-in user [:firstName])
+          lastName (get-in user [:lastName])
+          email (get-in user [:email])
+          _id (str (get-in user [:_id]))]
+      
+      {:status 200
+       :headers {"ContentType" "application/vnd.collection+json"}
+       :body {:collection
+              {:version 1.0
+               :href (str "http://" server/addr "/api/user")
+               :links []
+               :items [{:href (str "http://" server/addr "/api/user/" _id)
+                        :data [{:name "id" :value _id :prompt "User Id"}
+                               {:name "firstName" :value firstName :prompt "First Name"}
+                               {:name "lastName" :value lastName :prompt "Last Name"}
+                               {:name "email" :value email :email "Email Address"}]}
+                       :links []]}}})
+  (catch Exception e
+    ;; Todo: Log exception
+    {:status 500
+     :headers {"ContentType" "application/vnd.collection+json"}
+     :body {:collection          
+            {:version 1.0,
+             :href (str server/addr "/api/user")
+             :error {
+                     :title "User Retrieval Failure"
+                     :message "Please contact website owner."
+                     :code ""}}}})))
 
 (defn does-email-exist [email]
   (let [db db/db
