@@ -5,6 +5,7 @@
            [clojure.data :as data]
            [clojure.data.json :as json]
            [clj-http.client :as client]
+           [monger.collection :as mc]
            [website-api.db-config :as db]
            [website-api.core :refer :all]
            [website-api.services :as services]
@@ -137,10 +138,125 @@
 
 
 (deftest test-build-user-items  
-  (testing "Build User Items"
+  (testing "Build User Items With No Users"
+    ;; Test no users
+    (services/test-remove)
+    (let [users (mc/find-maps db/db "user")]
+      (is (= (services/build-user-items users) []))))
+
+    (testing "Build User Items With One User"
+    ;; Test one user
     (services/test-remove)
     (let [user1 (services/create-user-db "First1" "Last1" "Email1" "Password1")
+          user1-id (str (get-in user1 [:body :collection :items 0 :data 0 :value]))
+          users (mc/find-maps db/db "user")
+          items (services/build-user-items users)
+          expected-items [{:href
+                           (str "http://http://localhost:8080/api/user/" user1-id),
+                           :data
+                           [{:name "id", :value user1-id, :prompt "User Id"}
+                            {:name "firstName", :value "First1", :prompt "First Name"}
+                            {:name "lastName", :value "Last1", :prompt "Last Name"}
+                            {:name "email", :value "Email1", :email "Email Address"}]
+                           :links []}]]
+      (is (= items expected-items))))
+
+    (testing "Build User Items With Two Users"
+    ;; Test two users
+    (services/test-remove)
+    (let [user1 (services/create-user-db "First1" "Last1" "Email1" "Password1")
+          user1-id (get-in user1 [:body :collection :items 0 :data 0 :value])
           user2 (services/create-user-db "First2" "Last2" "Email2" "Password2")
-          users (services/get-users)]
-      (pp/pprint (services/build-user-items users)))))
-          
+          user2-id (get-in user2 [:body :collection :items 0 :data 0 :value])
+          users (mc/find-maps db/db "user")
+          items (services/build-user-items users)
+          expected-items [{:href
+                           (str "http://http://localhost:8080/api/user/" user1-id),
+                           :data
+                           [{:name "id", :value user1-id, :prompt "User Id"}
+                            {:name "firstName", :value "First1", :prompt "First Name"}
+                            {:name "lastName", :value "Last1", :prompt "Last Name"}
+                            {:name "email", :value "Email1", :email "Email Address"}],
+                           :links []}
+                          {:href
+                           (str "http://http://localhost:8080/api/user/" user2-id),
+                           :data
+                           [{:name "id", :value user2-id, :prompt "User Id"}
+                            {:name "firstName", :value "First2", :prompt "First Name"}
+                            {:name "lastName", :value "Last2", :prompt "Last Name"}
+                            {:name "email", :value "Email2", :email "Email Address"}],
+                           :links []}]]
+      ;; (pp/pprint (data/diff items expected-items))
+      (is (= items expected-items)))))
+
+
+(deftest test-get-users-db  
+  (testing "Get Users With No Users"
+    ;; Test no users
+    (services/test-remove)
+    (let [users (services/get-users-db)
+          expected-users {:status 200
+                          :headers {"ContentType" "application/vnd.collection+json"}
+                          :body {:collection
+                                 {:version 1.0
+                                  :href (str server/addr "/api/user/")
+                                  :links []
+                                  :items []}}}]
+      (is (= users expected-users))))
+
+    (testing "Build User Items With One User"
+    ;; Test one user
+    (services/test-remove)
+    (let [user1 (services/create-user-db "First1" "Last1" "Email1" "Password1")
+          user1-id (str (get-in user1 [:body :collection :items 0 :data 0 :value]))
+          users (services/get-users-db)
+          expected-users {:status 200
+                          :headers {"ContentType" "application/vnd.collection+json"}
+                          :body {:collection
+                                 {:version 1.0
+                                  :href (str server/addr "/api/user/")
+                                  :links []
+                                  :items [{:href
+                                           (str "http://http://localhost:8080/api/user/" user1-id),
+                                           :data
+                                           [{:name "id", :value user1-id, :prompt "User Id"}
+                                            {:name "firstName", :value "First1", :prompt "First Name"}
+                                            {:name "lastName", :value "Last1", :prompt "Last Name"}
+                                            {:name "email", :value "Email1", :email "Email Address"}]
+                                           :links []}]}}}]
+      (is (= users expected-users))))
+
+    (testing "Build User Items With Two Users"
+    ;; Test two users
+    (services/test-remove)
+    (let [user1 (services/create-user-db "First1" "Last1" "Email1" "Password1")
+          user1-id (get-in user1 [:body :collection :items 0 :data 0 :value])
+          user2 (services/create-user-db "First2" "Last2" "Email2" "Password2")
+          user2-id (get-in user2 [:body :collection :items 0 :data 0 :value])
+          users (services/get-users-db)
+          expected-users {:status 200
+                          :headers {"ContentType" "application/vnd.collection+json"}
+                          :body {:collection
+                                 {:version 1.0
+                                  :href (str server/addr "/api/user/")
+                                  :links []
+                                  :items [{:href
+                                           (str "http://http://localhost:8080/api/user/" user1-id),
+                                           :data
+                                           [{:name "id", :value user1-id, :prompt "User Id"}
+                                            {:name "firstName", :value "First1", :prompt "First Name"}
+                                            {:name "lastName", :value "Last1", :prompt "Last Name"}
+                                            {:name "email", :value "Email1", :email "Email Address"}],
+                                           :links []}
+                                          {:href
+                                           (str "http://http://localhost:8080/api/user/" user2-id),
+                                           :data
+                                           [{:name "id", :value user2-id, :prompt "User Id"}
+                                            {:name "firstName", :value "First2", :prompt "First Name"}
+                                            {:name "lastName", :value "Last2", :prompt "Last Name"}
+                                            {:name "email", :value "Email2", :email "Email Address"}],
+                                           :links []}]}}}]
+                                 ;; (pp/pprint (data/diff items expected-items))
+      (is (= users expected-users)))))
+
+
