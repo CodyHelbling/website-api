@@ -69,7 +69,7 @@
 
 
 (deftest test-get-user-by-id-db
-  (testing "API Get User By ID"
+  (testing "DB Get User By ID"
     (services/test-remove)
     (let [user (services/create-user-db "First" "Last" "Email" "Password")
           user-id (get-in user [:body :collection :items 0 :data 0 :value])
@@ -98,7 +98,7 @@
 
 
 (deftest test-get-user-by-email-db
-  (testing "API Get User By Email"
+  (testing "DB Get User By Email"
     (services/test-remove)
     (let [user (services/create-user-db "First" "Last" "Email" "Password")
           user-id (get-in user [:body :collection :items 0 :data 0 :value])
@@ -126,3 +126,21 @@
       ;; (pp/pprint (data/diff retrieved-user retrieved-user-expected))
       (is (= retrieved-user retrieved-user-expected))
       )))
+
+(deftest test-get-all-users-db
+  (testing "DB Get All Active Users"
+    (services/test-remove)
+    (let [user1 (services/create-user-db "First1" "Last1" "Email1" "Password1")
+          user2 (services/create-user-db "First2" "Last2" "Email2" "Password2")]
+      (pp/pprint (services/get-users)))))
+          
+
+
+(deftest test-build-user-items  
+  (testing "Build User Items"
+    (services/test-remove)
+    (let [user1 (services/create-user-db "First1" "Last1" "Email1" "Password1")
+          user2 (services/create-user-db "First2" "Last2" "Email2" "Password2")
+          users (services/get-users)]
+      (pp/pprint (services/build-user-items users)))))
+          
