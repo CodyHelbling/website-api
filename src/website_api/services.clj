@@ -12,12 +12,14 @@
 (declare create-user
          create-user-db
          delete-user
+         delete-user-db
          does-email-exist
          get-user-by-id
          get-user-by-id-db
          get-user-by-email
          get-user-by-email-db
          get-users
+         get-users-db
          test-read
          test-remove
          test-write)
@@ -88,12 +90,32 @@
                           :title "User Creation Failure"
                           :message "Email Already Exists"
                           :code ""}}}})))
-
 (defn delete-user [_id]
-  (let [db   db/db
-        coll "user"
-        user (mc/update-by-id db coll (ObjectId. _id) {$set {:isActive false}} {:upsert false})]
-    (get-user-by-id _id)))
+  (let [deletion (delete-user-db _id)
+        status (get-in deletion [:status])
+        headers (get-in deletion [:headers])
+        body (get-in deletion [:body])]
+    {:status status
+     :headers headers
+     :body (json/write-str body)}))
+
+(defn delete-user-db [_id]
+  (try
+    (let [db   db/db
+          coll "user"
+          user (mc/update-by-id db coll (ObjectId. _id) {$set {:isActive false}} {:upsert false})]
+      (get-users-db))
+    (catch Exception e
+      ;; Todo: Log exception
+      {:status 500
+       :headers {"ContentType" "application/vnd.collection+json"}
+       :body {:collection          
+              {:version 1.0,
+               :href (str server/addr "/api/user")
+               :error {
+                       :title "User Deletion Failure"
+                       :message "Please contact website owner."
+                       :code ""}}}})))
 
 (defn get-user-by-email [email]
   (let [user (get-user-by-email-db email)
@@ -188,13 +210,66 @@
                      :title "User Retrieval Failure"
                      :message "Please contact website owner."
                      :code ""}}}})))
- 
+
+(defn build-user-items
+  ([users]
+   (if (= (count users) 0)
+     []
+     (let [user (first users)
+           _id (str (get-in user [:_id]))
+           firstName (get-in user [:firstName])
+           lastName (get-in user [:lastName])
+           email (get-in user [:email])
+           item {:href (str "http://" server/addr "/api/user/" _id)
+                 :data [{:name "id" :value _id :prompt "User Id"}
+                        {:name "firstName" :value firstName :prompt "First Name"}
+                        {:name "lastName" :value lastName :prompt "Last Name"}
+                        {:name "email" :value email :email "Email Address"}]
+                 :links []}
+           items [item]]
+       
+       (if (> (count users) 1)
+         (build-user-items users items 1)
+         items))))
+
+  ([users items index]
+   (let [user (nth users index)
+         _id (str (get-in user [:_id]))
+         firstName (get-in user [:firstName])
+         lastName (get-in user [:lastName])
+         email (get-in user [:email])
+         item {:href (str "http://" server/addr "/api/user/" _id)
+               :data [{:name "id" :value _id :prompt "User Id"}
+                      {:name "firstName" :value firstName :prompt "First Name"}
+                      {:name "lastName" :value lastName :prompt "Last Name"}
+                      {:name "email" :value email :email "Email Address"}]
+               :links []}
+         items (conj items item)]
+     
+     (if (> (count users) (inc index))
+       (build-user-items users items (inc index))
+       items))))
+
 (defn get-users []
+  (let [users (get-users-db)
+        status (get-in users [:status])
+        headers (get-in users [:headers])
+        body (get-in users [:body])]
+    {:status status
+     :headers headers
+     :body (json/write-str body)}))
+
+(defn get-users-db []
   (let [db   db/db
         coll "user"
-        users (mc/find-maps db "user")]
-    ; (println (str users))
-    users))
+        users (mc/find-maps db "user" {:IsActive true})]
+    {:status 200
+     :headers {"ContentType" "application/vnd.collection+json"}
+     :body {:collection
+            {:version 1.0
+             :href (str server/addr "/api/user/")
+             :links []
+             :items (build-user-items users)}}}))
 
 (defn update-user [_id updates]
   (let [db db/db

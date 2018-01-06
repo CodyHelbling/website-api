@@ -259,4 +259,19 @@
                                  ;; (pp/pprint (data/diff items expected-items))
       (is (= users expected-users)))))
 
-
+(deftest test-delete-user-db
+  (testing "Delete User DB"
+    (services/test-remove)
+     (let [user1 (services/create-user-db "First1" "Last1" "Email1" "Password1")
+           user1-id (get-in user1 [:body :collection :items 0 :data 0 :value])
+           user-existance (services/does-email-exist "Email1")
+           delete-user (services/delete-user-db user1-id)
+           delete-user-expected {:status 200
+                                 :headers {"ContentType" "application/vnd.collection+json"}
+                                 :body {:collection
+                                        {:version 1.0
+                                         :href (str server/addr "/api/user/")
+                                         :links []
+                                         :items []}}}]
+       ;; (pp/pprint (data/diff delete-user delete-user-expected))
+       (is (= delete-user delete-user-expected)))))
