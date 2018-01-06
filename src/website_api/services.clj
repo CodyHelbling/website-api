@@ -168,6 +168,7 @@
       true
       false)))
 
+;; Should this return the user if IsActive == False?
 (defn get-user-by-id [_id]
   (let [user (get-user-by-id-db _id)
         body (get-in user [:body])
@@ -177,7 +178,6 @@
      :headers headers
      :body (json/write-str body)}))
                      
-
 (defn get-user-by-id-db [_id]
   (try
     (let [db   db/db
