@@ -92,6 +92,7 @@
 
   ;; Test Endpoints
   (compojure/POST "/login" [] login)
+  (compojure/GET "/test" [] "test")
   (compojure/GET "/test-write" [] {:body (json/write-str (services/test-write))
                                    :status 200
                                    :headers {"Content-Type" "text/plain"}})

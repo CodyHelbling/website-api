@@ -211,6 +211,7 @@
                      :message "Please contact website owner."
                      :code ""}}}})))
 
+;; This should be moved??
 (defn build-user-items
   ([users]
    (if (= (count users) 0)
@@ -257,14 +258,18 @@
         body (get-in users [:body])]
     {:status status
      :headers headers
-     :body (json/write-str body)}))
+     :body body}))
 
 (defn get-users-db []
   (let [db   db/db
         coll "user"
-        users (mc/find-maps db "user" {:IsActive true})]
+        users (mc/find-maps db "user")]
     {:status 200
-     :headers {"ContentType" "application/vnd.collection+json"}
+     :headers {"ContentType" "application/json"
+               "Access-Control-Allow-Origin" "*"
+               "Access-Control-Allow-Methods" "*"
+               "Access-Control-Allow-Headers" "*"
+               "Access-Control-Max-Age" "*"}
      :body {:collection
             {:version 1.0
              :href (str server/addr "/api/user/")
