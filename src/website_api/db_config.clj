@@ -13,4 +13,4 @@
     (def conn conn)
     (def db db)))
 
-(def server "http://localhost")
+(def server "http://0.0.0.0:8080")
