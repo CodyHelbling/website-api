@@ -11,6 +11,7 @@
 
 (defn init []
   (let [ conn (mg/connect {:host "mongo1" :port 27017})]
+         
     (println "\nInitializing Database Connection: " conn)
     (def conn conn)
     (def db db)))

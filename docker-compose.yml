@@ -1,17 +1,19 @@
-version: "2"
+version: '3'
 services:
-  app:
-    container_name: website-api
+  web-api:
+    container_name: website-api1
     restart: always
     build: .
     ports:
-      - "8080:8080"
+      - 0.0.0.0:8080:8080
+    command: lein run
     links:
-      - mongo:3.5
-  mongo:
-    container_name: mongo
-    image: mongo:3.5
-    volumes:
-      - ./data:/data/db
+      - mongod
+  mongod:
+    image: mongo:latest
+    container_name: mongo1
     ports:
-      - "127.0.0.1:27017:27017"
+      - 27017:27017
+
+
+
