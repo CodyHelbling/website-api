@@ -10,7 +10,8 @@
 (def db nil)
 
 (defn init []
-  (let [ conn (mg/connect {:host "mongo1" :port 27017})]
+  (let [ conn (mg/connect {:host "mongo1" :port 27017})
+         db (mg/get-db conn "drop-happy-db1")]
          
     (println "\nInitializing Database Connection: " conn)
     (def conn conn)
