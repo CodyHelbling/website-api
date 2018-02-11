@@ -12,13 +12,5 @@ build:
   stage: build
   script: echo "Building the app"
 
-deploy_staging:
-  stage: deploy
-  script:
-    - echo "Deploy to staging server"
-  environment:
-    name: staging
-    url: http://35.184.20.87
-    only:
-      - master
+
                       
