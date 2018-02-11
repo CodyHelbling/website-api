@@ -14,7 +14,7 @@ build:
 deploy_staging:
   stage: deploy
   script:
-    - echo "Deploy to staging server"
+    - "sudo docker-compose up"
   environment:
     name: staging
     url: http://35.224.187.246
