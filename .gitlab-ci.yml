@@ -18,7 +18,7 @@ deploy_staging:
     - echo "Deploy to staging server"
   environment:
     name: staging
-    url: https://staging.example.com
+    url: http://35.184.20.87
     only:
       - master
                       
