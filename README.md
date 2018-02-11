@@ -1,6 +1,5 @@
 # website-api
 
-
 FIXME: description
 
 ## Installation
