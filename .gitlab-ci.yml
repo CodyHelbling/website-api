@@ -14,7 +14,7 @@ build:
 deploy_staging:
   stage: deploy
   script:
-    - "pwd; docker-compose up"
+    - "pwd; docker-compose up -d"
   environment:
     name: staging
     url: http://35.224.187.246
