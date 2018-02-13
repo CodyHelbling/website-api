@@ -4,8 +4,7 @@ services:
     container_name: website-api1
     restart: always
     build: .
-    ports:
-      - 0.0.0.0:8080:80
+      - 0.0.0.0:80:8080
     command: lein run
     links:
       - mongod
