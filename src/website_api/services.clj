@@ -58,7 +58,10 @@
                                        :isActive  true})
         ;; User successfully created
         {:status 200
-         :headers {"ContentType" "application/vnd.collection+json"}
+         :headers {"ContentType" "application/json"
+                   "Access-Control-Allow-Origin" "*"
+                   "Access-Control-Allow-Headers" "*"
+                   "Access-Control-Max-Age" "*"}
          :body {:collection
                 {:version 1.0
                  :href (str server/addr "/api/user")
@@ -72,7 +75,8 @@
         (catch Exception e
           ;; Todo: Log exception
           {:status 500
-           :headers {"ContentType" "application/vnd.collection+json"}
+           :headers {"ContentType" "application/json"
+                     "Access-Control-Allow-Origin" "*"}
            :body {:collection          
                    {:version 1.0,
                     :href (str server/addr "/api/user")
@@ -258,12 +262,12 @@
         body (get-in users [:body])]
     {:status status
      :headers headers
-     :body body}))
+     :body (json/write-str body)}))
 
 (defn get-users-db []
   (let [db   db/db
         coll "user"
-        users (mc/find-maps db "user")]
+        users (mc/find-maps db "user" {:isActive true})]
     {:status 200
      :headers {"ContentType" "application/json"
                "Access-Control-Allow-Origin" "*"

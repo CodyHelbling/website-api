@@ -69,23 +69,36 @@
                     :status 200
                     :headers {"Content-Type" "text/plain"}}))
   ;; User API
+
+  ;; ------ This Endpoint Needs to Be removed in Prod ---------------
+  (compojure/OPTIONS "/api/user" request
+                 (println "Route: OPTIONS /api/user")
+                 (json/write-str {"ContentType" "application/json"
+                                  "Access-Control-Allow-Origin" "*"
+                                  "Access-Control-Allow-Headers" "*"
+                                  "Access-Control-Max-Age" "*"}))
+    ;; --------------------------------------------------------------
+  
   (compojure/POST "/api/user" request
                   (println "Route: POST /api/user")
                   (services/create-user request))
 
   (compojure/GET "/api/user" request
                  (println "Route: GET /api/user")
-                 (json/write-str (services/get-users)))
+                 (services/get-users))
+  
   (compojure/GET "/api/user/:id" [_id]
                  (println "Route: GET /api/user/:id")
                  (services/get-user-by-id _id))
+
   (compojure/PUT "/api/user" request
                  (println "Route: PUT /api/user")
-                 (json/write-str (services/update-user
-                                   (get-in request [:body :_id]))))
+                 (services/update-user
+                  (get-in request [:body :_id])))
+
   (compojure/DELETE "/api/user" request
                     (println "Route: DELETE /api/user")
-                    (json/write-str (services/delete-user request)))
+                    (services/delete-user (get-in request [:body :id]))))
 
 
   ;; Product API
@@ -103,4 +116,4 @@
                                     :status 200
                                     :headers {"Content-Type" "text/plain"}})
   (route/resources "/")
-  (route/not-found "Page not found"))
+  (route/not-found "Page not found")
