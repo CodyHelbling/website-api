@@ -12,8 +12,6 @@
            [website-api.server-config :as server]))
 
 
-(def test "hello world")
-
 (deftest test-create-user-db
   (testing "DB User Creation"
     (services/test-remove)
