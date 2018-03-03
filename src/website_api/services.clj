@@ -1,7 +1,7 @@
 (ns website-api.services
   (:require [website-api.db-config :as db]
             [website-api.server-config :as server]
-            [clojure.pprint :as pp]
+            [clojure.pprint :as pprint]
             [monger.core :as mg]
             [monger.collection :as mc]
             [monger.operators :refer :all]
@@ -27,7 +27,7 @@
 
 ;; User Services
 (defn create-user [request]
-  (pp/pprint request)
+  (pprint/pprint request)
   (let [;; Get parameters data from request
         firstName (get-in request [:body :firstName])
         lastName (get-in request [:body :lastName])
@@ -281,6 +281,8 @@
              :items (build-user-items users)}}}))
 
 (defn update-user [_id updates]
+  ;; (println "Updating User! " _id)
+  ;; (pprint/pprint updates)
   (let [db db/db
         coll "user"
         email (get-in updates [:email])

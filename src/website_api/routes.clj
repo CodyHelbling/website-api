@@ -55,7 +55,7 @@
   (get-in request [:body :email]))
 
 (defn get-password [request]
-  (get-in request [:body :password]))
+  (get-in request [:body :password]))1
 
 (compojure/defroutes app
   (compojure/GET "/" request
@@ -91,10 +91,10 @@
                  (println "Route: GET /api/user/:id")
                  (services/get-user-by-id _id))
 
-  (compojure/PUT "/api/user" request
-                 (println "Route: PUT /api/user")
-                 (services/update-user
-                  (get-in request [:body :_id])))
+  (compojure/PUT "/api/user/:id" [id :as request]
+                 (println "Route: PUT /api/user/:id")
+                 (pprint/pprint request)
+                 (services/update-user id (get-in request [:body])))
 
   (compojure/DELETE "/api/user" request
                     (println "Route: DELETE /api/user")
