@@ -17,7 +17,6 @@
 
 (def secret "mysupersecret")
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Semantic response helpers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -57,9 +56,14 @@
 (defn get-password [request]
   (get-in request [:body :password]))1
 
+(def please-authenticate
+  {:body (json/write-str {:message "Please Authenticate!"})
+   :status 401
+   :headers {"Content-Type" "application/json"}})
+
 (compojure/defroutes app
-  (compojure/GET "/" request
-                 (println "Route: /")
+  (compojure/GET "/api/login" request
+                 (println "Route: /api/login")
                  (pprint/pprint request)
                  (if (authenticated? request)
                    {:body (str "Hello " (:identity request) "!")
@@ -77,16 +81,39 @@
                                   "Access-Control-Allow-Origin" "*"
                                   "Access-Control-Allow-Headers" "*"
                                   "Access-Control-Max-Age" "*"}))
-    ;; --------------------------------------------------------------
+
+  (compojure/OPTIONS "/api/login" request
+                 (println "Route: OPTIONS /api/user")
+                 (json/write-str {"ContentType" "application/json"
+                                  "Access-Control-Allow-Origin" "*"
+                                  "Access-Control-Allow-Headers" "*"
+                                  "Access-Control-Max-Age" "*"}))
+  
+(compojure/OPTIONS "/api/user/:id" request
+                 (println "Route: OPTIONS /api/user/:id")
+                 (json/write-str {"ContentType" "application/json"
+                                  "Access-Control-Allow-Origin" "*"
+                                  "Access-Control-Allow-Headers" "*"
+                                  "Access-Control-Max-Age" "*"}))
+  
+  ;; --------------------------------------------------------------
   
   (compojure/POST "/api/user" request
                   (println "Route: POST /api/user")
-                  (services/create-user request))
+                 ;; (if (authenticated? request)
+                   (services/create-user request)
+                   ;; please-authenticate)
+                   )
 
   (compojure/GET "/api/user" request
                  (println "Route: GET /api/user")
-                 (services/get-users))
-  
+                 ;;(if (authenticated? request)
+                     (services/get-users)
+                   ;;  please-authenticate))
+                     ;; {:body "Hello Anonymous!"
+                     ;;  :status 200
+                     ;;  :headers {"Content-Type" "text/plain"}}))
+  )
   (compojure/GET "/api/user/:id" [_id]
                  (println "Route: GET /api/user/:id")
                  (services/get-user-by-id _id))
@@ -94,17 +121,18 @@
   (compojure/PUT "/api/user/:id" [id :as request]
                  (println "Route: PUT /api/user/:id")
                  (pprint/pprint request)
-                 (services/update-user id (get-in request [:body])))
+                 (if (authenticated? request)
+                   (services/update-user id (get-in request [:body]))
+                   please-authenticate))
 
   (compojure/DELETE "/api/user" request
                     (println "Route: DELETE /api/user")
-                    (services/delete-user (get-in request [:body :id]))))
-
-
-  ;; Product API
+                    (if (authenticated? request)
+                      (services/delete-user (get-in request [:body :id]))
+                      please-authenticate))
 
   ;; Test Endpoints
-  (compojure/POST "/login" [] login)
+  (compojure/POST "/api/login" [] login)
   (compojure/GET "/test" [] "test")
   (compojure/GET "/test-write" [] {:body (json/write-str (services/test-write))
                                    :status 200
@@ -116,4 +144,4 @@
                                     :status 200
                                     :headers {"Content-Type" "text/plain"}})
   (route/resources "/")
-  (route/not-found "Page not found")
+  (route/not-found "Page not found"))

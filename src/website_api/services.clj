@@ -281,8 +281,8 @@
              :items (build-user-items users)}}}))
 
 (defn update-user [_id updates]
-  ;; (println "Updating User! " _id)
-  ;; (pprint/pprint updates)
+  (println "Updating User! " _id)
+  (pprint/pprint updates)
   (let [db db/db
         coll "user"
         email (get-in updates [:email])
@@ -305,7 +305,6 @@
         coll "user"]
     (mc/remove db coll)))
 
-
 (defn test-write []
   (let [db   db/db
         coll "user"]
@@ -319,6 +318,3 @@
         coll "user"
         all-docs (monger.collection/find-maps db coll)]
     all-docs))
-
-(defn something []
-  "Hello World")

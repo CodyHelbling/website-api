@@ -1,0 +1,32 @@
+{
+  "kind": "Pod",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "drop-happy",
+    "labels": {
+      "app": "webapp"
+    }
+  },
+  "spec": {
+    "containers": [
+      {
+        "name": "user-api",
+        "image": "website-api:v1",
+        "ports": [
+          {
+            "containerPort": 8080
+          }
+        ]
+      },
+      {
+        "name": "mongo",
+        "image": "mongo:latest",
+        "ports": [
+          {
+            "containerPort": 27017
+          }
+        ]
+      }
+    ]
+  }
+}

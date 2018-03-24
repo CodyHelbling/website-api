@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+        name: "website-api-pod"
+        labels:
+                name: ""
+        namespace: "drophappy"
+        annotations: []
+        generateName: ""
+spec:
+        containers:
+                -
+                        args:
+                                - ""
+                        command:
+                                - ""
+                        env:
+                                -
+                                        name: ""
+                                        value: ""
+                                image: ""
+                                image
