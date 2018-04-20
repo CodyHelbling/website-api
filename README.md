@@ -10,3 +10,9 @@ A user management REST API side-project.
 ## Usage
 
 docker-compose up
+
+## ToDos
+[ ] Authentication
+[ ] Authorization 
+...
+[ ] OWASP Top 10
