@@ -1,36 +1,12 @@
 # website-api
 
-FIXME: description
+A user management REST API side-project.
 
 ## Installation
-
-Download from http://example.com/FIXME.
+1. Clone repo
+2. Install docker
+3. Install docker-compose
 
 ## Usage
 
-FIXME: explanation
-
-    $ java -jar website-api-0.1.0-standalone.jar [args]
-
-## Options
-
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
-dksjf
-## License
-
-Copyright © 2017 FIXME
-
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+docker-compose up
